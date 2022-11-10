@@ -1,0 +1,192 @@
+$(document).ready(function () {
+    //$(function(){$('[id$="-include"]').each(function (e){$(this).load("includes\\" + $(this).attr("id").replace("-include", "") +  ".html");});});   
+    $(window).on('load', function () {
+        $('.overlay').click(function () {
+            $("#form-box, .overlay").fadeOut();
+        });
+    });
+    $('#angle-category').click(function () {
+        $(this).find("i").toggleClass("fa-angle-up");
+        $(".megadrop-container").toggleClass("active");
+    });
+
+    var slideHeight = $(window).height();
+    //$('.hero-image').css('height', slideHeight);
+    $(".box").click(function () {
+        $(this).next().slideToggle("fast");
+        $(this).find('i').toggle();
+    });
+
+    //slick custom
+    $('.slider-main').slick({
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        centerMode: false,
+        arrows: false,
+        fade: false,
+        autoplay: true,
+        dots: true
+    });
+    //$('.slider-main .slick-slide, #slider-wrapper').css('height', slideHeight);	
+
+    $('.category-carousel').slick({
+        slidesToShow: 4,
+        dots: false,
+        arrows: true,
+        centerMode: false,
+        infinite: true,
+        //autoplay:true,
+        slidesToScroll: 1,
+        responsive: [
+				{
+				    breakpoint: 1100,
+				    settings: {
+				        slidesToShow: 3,
+				        arrows: false
+				    }
+				},
+				{
+				    breakpoint: 800,
+				    settings: {
+				        slidesToShow: 1,
+				        arrows: false
+				    }
+				},
+				{
+				    breakpoint: 500,
+				    settings: {
+				        slidesToShow: 1,
+				        arrows: false
+				    }
+				},
+			]
+    });
+
+    $('.slider-product').slick({
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        arrows: false,
+        fade: true
+    });
+    $('.slider-product-nav').slick({
+        slidesToShow: 4,
+        slidesToScroll: 1,
+        asNavFor: '.slider-product',
+        dots: true,
+        focusOnSelect: true
+    });
+    $('.slider-product-nav a[data-slide]').click(function (e) {
+        e.preventDefault();
+        var slideno = $(this).data('slide');
+        $('.slider-product').slick('slickGoTo', slideno - 1);
+    });
+
+    var img2 = $('.img2');
+    var img1 = $('.img1');
+    var overle = $('.overle');
+    overle.mousemove(function (e) {
+        var amountMovedX = (e.pageX * -1 / 36);
+        var amountMovedY = (e.pageY * -1 / 20);
+        img2.css({
+            '-webkit-transform': 'translate3d(' + amountMovedX + 'px,' + amountMovedY + 'px, 0)',
+            '-moz-transform': 'translate3d(' + amountMovedX + 'px,' + amountMovedY + 'px, 0)',
+            '-ms-transform': 'translate3d(' + amountMovedX + 'px,' + amountMovedY + 'px, 0)',
+            '-o-transform': 'translate3d(' + amountMovedX + 'px,' + amountMovedY + 'px, 0)',
+            'transform': 'translate3d(' + amountMovedX + 'px,' + amountMovedY + 'px, 0)'
+        });
+    });
+    overle.mousemove(function (e) {
+        var amountMovedX = (e.pageX * -1 / 50);
+        var amountMovedY = (e.pageY * -1 / 20);
+        img1.css({
+            '-webkit-transform': 'translate3d(' + amountMovedX + 'px,' + amountMovedY + 'px, 0)',
+            '-moz-transform': 'translate3d(' + amountMovedX + 'px,' + amountMovedY + 'px, 0)',
+            '-ms-transform': 'translate3d(' + amountMovedX + 'px,' + amountMovedY + 'px, 0)',
+            '-o-transform': 'translate3d(' + amountMovedX + 'px,' + amountMovedY + 'px, 0)',
+            'transform': 'translate3d(' + amountMovedX + 'px,' + amountMovedY + 'px, 0)'
+        });
+    });
+
+    /*TweenMax.set([title, img1], { transformStyle: "preserve-3d" });
+
+    overle.mousemove(function(e) {
+    var sxPos = e.pageX / container.width() * 100 - 100;
+    var syPos = e.pageY / container.height() * 100 - 100;
+    TweenMax.to(title, 2, {
+    rotationY: 0.03 * sxPos,
+    rotationX: -0.03 * syPos,
+    transformPerspective: 500,
+    transformOrigin: "center center -400",
+    ease: Expo.easeOut
+    });
+    TweenMax.to(img, 2, {
+    rotationY: 0.03 * sxPos,
+    rotationX: -0.03 * syPos,
+    transformPerspective: 500,
+    transformOrigin: "center center -200",
+    ease: Expo.easeOut
+    });
+    });*/
+    $('.addTooltip').hover(function () {
+        var title = $(this).attr('title');
+        $(this).data('tipText', title).removeAttr('title');
+        $('<p class="tooltipa"></p>')
+        .text(title)
+        .appendTo('body')
+        .fadeIn('slow');
+    }, function () {
+        $(this).attr('title', $(this).data('tipText'));
+        $('.tooltipa').remove();
+    }).mousemove(function (e) {
+        var mousex = e.pageX - 10;
+        var mousey = e.pageY + 20;
+        $('.tooltipa').css({ top: mousey, left: mousex })
+    });
+
+    var offset = 200;
+    var duration = 500;
+    jQuery(window).scroll(function () {
+        if (jQuery(this).scrollTop() > offset) {
+            //jQuery(".scroll_top").fadeIn(duration);
+            //jQuery(".navigation").addClass('navigation--fix');
+        } else {
+            //jQuery(".scroll_top").fadeOut(duration);
+            jQuery(".navigation").removeClass('navigation--fix');
+        }
+    });
+
+    jQuery(".scroll_top").click(function () {
+        var aTop = $(".container").offset().top;
+        jQuery("html,body").animate({ scrollTop: aTop }, 500);
+    });
+	
+	
+	
+		$(document).ready(function () {
+			$('ul.product-view li a').click(function () {
+				$("#full-view").append($(".product-view").clone());
+				$(".close-view").fadeIn();
+			}); $('.close-view').click(function () {
+				$('.product-view')[1].remove();
+				$(".close-view").fadeOut();
+			});
+		});
+		
+	if ($(window).width() > 500) {
+		$('.ex1').zoom();
+		//$('.ex2').zoom({ on:'grab' });
+		//$('.ex3').zoom({ on:'click' });	
+		//$('.ex4').zoom({ on:'toggle' });
+	} else {
+		console.log('Pure mobile view');
+	}
+}); //jQuery
+
+function mobMenu() {
+    var x = document.getElementById("mobMenu");
+    if (x.className === "topnav") {
+        x.className += " responsive-menu";
+    } else {
+        x.className = "topnav";
+    }
+}

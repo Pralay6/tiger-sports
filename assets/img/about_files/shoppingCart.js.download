@@ -1,0 +1,365 @@
+﻿//-------------------Shopping Cart-----------------------------------//
+var CartTotal = 0;
+var Amount = 0;
+var lang = {};
+lang.CartRemoveConfirm = 'Are you sure you want to remove this item from your cart?';
+var Cart = {
+    displayItems: function (jsdata) {
+        var total = 0, qty = 0;
+        //$(cartbox).empty();
+        if (jsdata.length > 0) {
+            //$('p.empty').remove();
+            //$(cartbox).show();
+            $.each(jsdata, function (key, value) {
+                var size = value.Size != null ? value.Size : "";
+                var color = value.Color != null ? value.Color : "";
+                var desc = "";
+                if (color == "") {
+                    if (size != "")
+                        desc = "Size:" + size;
+                    else
+                        desc = "Color:" + color;
+                }
+                else {
+                    if (size != "")
+                        desc = "Size:" + size + " | Color:" + color;
+                    else
+                        desc = "Color:" + color;
+                } /*
+            $(cartbox).append("<div class='sing-cart-pro'>" +
+                    "<div class='cart-image'>" +
+                    "<img src='/" + value.ImageUrl + "' alt='" + value.ProductName + "' />" +
+                    "</div>" +
+                    "<div class='cart-product-info'>" +
+                    "<p class=\"product-name\">" + value.ProductName + "</p>" +
+                    "<div class=\"cart-price\">" +
+                    "<span class=\"quantity\"><strong>" + value.Quantity + " </strong></span>" +
+                    "<span class=\"p-price hide\">x&nbsp;<i class='fa fa-rupee'></i>&nbsp; " + value.Price + "/-</span>" +
+                    "</div>" +
+                    "<a class=\"remove-pro\" title='Remove This Item' onclick='var r = confirm(\"Are you sure you would like to remove this item from the shopping cart?\");if(r==true)Cart.RemoveItemfromCart(\"" + value.ProductID + "\",\"" + value.SizeId + "\");''><i class=\"fa fa-times\"></i></a>" +
+                            //"" + desc + "" +
+                    "</div>");
+             */
+                total += value.SubTotal;
+                qty += value.Quantity;
+            });
+            //$('.cart-checkout').show(); $('.view-cart').show();
+        }
+        else {
+            //$("<p class='empty'>You have no items in your shopping cart.</p>").insertBefore($(cartbox));
+            //$('.cart-checkout').hide(); $('.view-cart').hide();
+        }
+        CartTotal = parseFloat(total).toFixed(2)
+        $(cartqty).text(qty); $(mocartqty).text(qty);
+        $(cartval).text(CartTotal);
+    },
+    LoadCartItems: function () {
+        $.ajax({
+            type: "POST",
+            url: "/product.aspx/GetCartItems",
+            data: JSON.stringify({}),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                //console.log(data);
+                Cart.displayItems(JSON.parse(data.d));
+            },
+            error: function (jqXHR, status, errorThrown) {
+                var responseText = $.parseJSON(jqXHR.responseText);
+                var err = eval("(" + jqXHR.responseText + ")");
+                alert(responseText.Message);
+            }
+        });
+    },
+    AddItemstoCart: function (productid, name, qty, price, imageurl, color, sizeid, size) {
+        if (qty > 0) {
+            if (sizeid >= 0) {
+                $.ajax({
+                    type: "POST",
+                    url: "/product.aspx/AddItemToCart",
+                    data: JSON.stringify({ id: productid, name: name, qty: qty, price: price, image: imageurl, color: color, sizeid: sizeid, size: size }),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (data) {
+                        Cart.displayItems(JSON.parse(data.d));
+                        $('#msg').css('display', 'block');
+                        setTimeout(function () { $('#msg').css('display', 'none'); }, 2000);
+                    },
+                    error: function (jqXHR, status, errorThrown) {
+                        var responseText = $.parseJSON(jqXHR.responseText);
+                        var err = eval("(" + jqXHR.responseText + ")");
+                        alert(responseText.Message);
+                    }
+                });
+            }
+            else
+                alert("Value Size Missing!");
+        }
+        else
+            alert("Plese Enter Quantity!");
+    },
+    RemoveCartItem: function (itemId, sizeid, color) {
+        if (confirm(lang.CartRemoveConfirm)) {
+            $.ajax({
+                type: "POST",
+                url: "/product.aspx/RemoveCartItems",
+                data: JSON.stringify({ id: itemId, sizeid: sizeid, color: color }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data) {
+                    location.href = "/shopping-cart";
+                },
+                error: function (jqXHR, status, errorThrown) {
+                    var responseText = $.parseJSON(jqXHR.responseText);
+                    var err = eval("(" + jqXHR.responseText + ")");
+                    alert(responseText.Message);
+                }
+            });
+        }
+    },
+    RemoveItemfromCart: function (id, sizeid, color) {
+        $.ajax({
+            type: "POST",
+            url: "/product.aspx/RemoveCartItems",
+            data: JSON.stringify({ id: id, sizeid: sizeid, color: color }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                Cart.displayItems(JSON.parse(data.d));
+            },
+            error: function (jqXHR, status, errorThrown) {
+                var responseText = $.parseJSON(jqXHR.responseText);
+                var err = eval("(" + jqXHR.responseText + ")");
+                alert(responseText.Message);
+            }
+        });
+    },
+    RemovaAllItemsfromCart: function () {
+        $.ajax({
+            type: "POST",
+            url: "/product.aspx/RemoveAllItems",
+            data: JSON.stringify({}),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                location.reload();
+            },
+            error: function (jqXHR, status, errorThrown) {
+                var responseText = $.parseJSON(jqXHR.responseText);
+                var err = eval("(" + jqXHR.responseText + ")");
+                alert(responseText.Message);
+            }
+        });
+    },
+    GetStockDetail: function (id, sizeid, result) {
+        $.ajax({
+            type: "POST",
+            url: "/product.aspx/GetStockDetail",
+            data: JSON.stringify({ id: id, sizeid: sizeid }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                var res = JSON.parse(data.d);
+                //console.log(res);
+                result(res);
+            },
+            error: function (jqXHR, status, errorThrown) {
+                var responseText = $.parseJSON(jqXHR.responseText);
+                var err = eval("(" + jqXHR.responseText + ")");
+                alert(responseText.Message);
+            }
+        });
+    },
+    UpdateCartItem: function (id, sizeid, price, qty, color) {
+        $.ajax({
+            type: "POST",
+            url: "/product.aspx/UpdateCartItem",
+            data: JSON.stringify({ id: id, sizeid: sizeid, price: price, qty: qty, color: color }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                location.reload();
+            },
+            error: function (jqXHR, status, errorThrown) {
+                var responseText = $.parseJSON(jqXHR.responseText);
+                var err = eval("(" + jqXHR.responseText + ")");
+                alert(responseText.Message);
+            }
+        });
+    },
+    sendCode: function () {
+        var proceed = true;
+        var email = $('input[name=insemail]').val();
+        var id = $('#result').attr('data-uid');
+        if (email == "") {
+            $('input[name=insemail]').css('border-color', 'red'); proceed = false;
+            $("#result").hide().html("<h1 class='red'>Enter your Email-Id to get code!</h1>").slideDown();
+            return false;
+        }
+        else if (!ValidateEmail(email)) { proceed = false; $("#result").hide().html('<h1 class="red">Invalid Email-Id!</h1>').slideDown(); return false; }
+        else if (id == null) {
+            proceed = false;
+            $("#result").hide().html("<h1 class='red'>Please Login again!</h1>").slideDown();
+            return false;
+        }
+        if (proceed) {
+            if (parseInt(id) > 0) {
+                $.ajax({
+                    type: "POST",
+                    url: "/product.aspx/SendPromoCode",
+                    data: JSON.stringify({ id: id, email: email }),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.d == 1) {
+                            $("#result").hide().html("<h1 class='red'>A code has been sent to your email-Id!</h1>").slideDown();
+                            $('#instantpopup').remove();
+                            alertify.alert('An Instant Code has been sent to your Email-Id that is valid for one day!<br>Please check your mail & get your code!');
+                        }
+                        else if (data.d == 2) {
+                            $("#result").hide().html("<h1 class='red'>Mail Sending Error!</h1>").slideDown();
+                        }
+                        else if (data.d == 0) {
+                            $("#result").hide().html("<h1 class='red'>There is no more instant code!</h1>").slideDown();
+                            $('#instantpopup').remove();
+                        }
+                        else
+                            $("#result").hide().html("<h1 class='red'>Some error occoured during sending!</h1>").slideDown();
+                    },
+                    error: function (jqXHR, status, errorThrown) {
+                        var responseText = $.parseJSON(jqXHR.responseText);
+                        var err = eval("(" + jqXHR.responseText + ")");
+                        alertify.error(responseText.Message);
+                    }
+                });
+            }
+            else
+                alert('Please Login again!');
+        }
+    },
+    ApplyPromo: function () {
+        var txtObjPromo = $('input[type="text"][name="txtpromoCode"]');
+        var code = txtObjPromo.val();
+        if (CartTotal == 0)
+            alert("Code cannot be applied because there are no items in your cart!");
+        else if (code != "") {
+            $.ajax({
+                type: "POST",
+                url: "/shopping-cart.aspx/getPromoDiscount",
+                data: JSON.stringify({ code: code }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data) {
+                    var res = JSON.parse(data.d);
+                    //console.log(res);
+                    /*
+                    if (res.UserId == 0) {
+                        alert('Please login before applying code!');
+                        $(txtpromoCode).hide();
+                        location.href = "/Login/";
+                    }
+                    else {*/
+                    if (res.Id > 0 && !res.Active) {
+                        $("[id$='trpromo']").show(); $("[id$='promoTag']").show(); txtObjPromo.val('');
+                        $('div[id*="promoCode"]').text(res.Code);
+                        $('._promo-text').html("Code Applied Successfully!&nbsp;<span class='_promo-cross' title='Remove' onclick='Cart.CancelPromo();'><i class='fa fa-times'></i></span>");
+                        $("[id$='promoDiscount']").html('<i class="fa fa-rupee-sign"></i> ' + parseFloat(res.Discount).toFixed(2));
+                        $("[id$='GTotal']").html('<i class="fa fa-rupee-sign"></i> ' + parseFloat(res.Amount).toFixed(2));
+                    }
+                    else {
+                        alert('Either Code is not valid or expired!');
+                        return;
+                    }
+                    //}
+                },
+                error: function (jqXHR, status, errorThrown) {
+                    var responseText = $.parseJSON(jqXHR.responseText);
+                    var err = eval("(" + jqXHR.responseText + ")");
+                    alert(responseText.Message);
+                }
+            });
+        }
+        else {
+            alert('Enter Promo code!');
+            txtObjPromo.focus();
+        }
+    },
+    CancelPromo: function () {
+        $.ajax({
+            type: "POST",
+            url: "/shopping-cart.aspx/cancelPromoDiscount",
+            data: JSON.stringify({}),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                var res = JSON.parse(data.d);
+                //console.log(res);
+                Amount = parseFloat(res.Amount);
+                $("[id$='trpromo']").hide(); $("[id$='promoTag']").hide();
+                $('div[id*="promoCode"]').text('');
+                $('._promo-text').html("Code Removed Successfully!");
+                $("[id$='promoDiscount']").html('<i class="fa fa-rupee-sign"></i> 0.00');
+                $("[id$='GTotal']").html('<i class="fa fa-rupee-sign"></i> ' + parseFloat(Amount).toFixed(2));
+            },
+            error: function (jqXHR, status, errorThrown) {
+                var responseText = $.parseJSON(jqXHR.responseText);
+                var err = eval("(" + jqXHR.responseText + ")");
+                alert(responseText.Message);
+            }
+        });
+    }
+};
+var GetTotalQty = function (id) {
+    var sum = 0;
+    // iterate through each td based on class and add the values
+    $(".p_" + id + "").each(function () {
+        var value = $(this).val();
+        // add only if the value is number
+        if (!isNaN(value) && value.length != 0) {
+            sum += parseFloat(value);
+        }
+    });
+    //console.log(sum);
+    return sum;
+}
+$(function () {
+    Cart.LoadCartItems();
+    // Cartview
+
+    $('.basket-qty a.edit').click(function (e) {
+        var row = $(this).closest("tr");
+        row.find('.basket-update').removeClass('hide');
+        row.find('.basket-qty').addClass('hide');
+        e.preventDefault();
+    });
+
+    $('.basket-update a.cancel').click(function (e) {
+        var row = $(this).closest("tr");
+        row.find('.basket-update').addClass('hide');
+        row.find('.basket-qty').removeClass('hide');
+        e.preventDefault();
+    });
+
+    $('.basket-update a.update').click(function (e) {
+        var row = $(this).closest("tr");
+        e.preventDefault();
+
+        var qobj = row.find('.basket-update').find('input:eq(0)');
+        var pobj = row.find('td:eq(2)');    // price column
+        var subobj = row.find('td:eq(4)');  // subtotal column
+        var id = $(qobj).attr('id').split('_')[1];   // like p_1
+        var price = pobj.text() != "" ? parseFloat(pobj.text()) : 0;
+        var qty = $(qobj).val() != "" ? $(qobj).val() : 1;
+        var tqty = GetTotalQty(id);
+        var sizeid = $(qobj).attr('data-size');
+        var color = $(qobj).attr('data-color');
+        //console.log(id + ',size: ' + sizeid + ',price: ' + price + ',qty: ' + qty + ',color: ' + color);
+        if (qty != "" && qty > 0) {
+            Cart.UpdateCartItem(id, sizeid, price, qty, color);
+        }
+    });
+
+    $('.btn-remove').click(function (e) {
+        e.preventDefault();
+    });
+});

@@ -1,0 +1,235 @@
+﻿var $ = $.noConflict();
+var domain = location.origin;
+if (navigator.cookieEnabled == 0) {
+    alert("You need to enable cookies for this site to load properly!");
+}
+function setCookie(c_name, value, expiredays) {
+    var exdate = new Date();
+    exdate.setDate(exdate.getDate() + expiredays);
+    document.cookie = c_name + "=" + value + ";path=/" + ((expiredays == null) ? "" : ";expires=" + exdate.toGMTString());
+}
+function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
+function deletecookie(name) {
+    var d = new Date();
+    d.setDate(d.getDate() - 1)
+    document.cookie = name + '=;expires=" + d.toGMTString() + ";" + ";';
+}
+
+var setLocation = function (url) {
+    window.location.href = url;
+};
+var tooltipHandler = function () {
+    $('[data-toggle="tooltip"]').tooltip();
+};
+function alphaOnly(evt) {
+    var englishAlphabetAndWhiteSpace = /[A-Za-z ]/g;
+    var key = String.fromCharCode(event.which);
+    //alert(event.keyCode);
+    // For the keyCodes
+    // keyCode == 8  is backspace
+    // keyCode == 37 is left arrow
+    // keyCode == 39 is right arrow
+    // englishAlphabetAndWhiteSpace.test(key) does the matching, that is, test the key just typed against the regex pattern
+    if (event.keyCode == 8 || event.keyCode == 37 || event.keyCode == 39 || englishAlphabetAndWhiteSpace.test(key)) {
+        return true;
+    }
+    // If we got this far, just return false because a disallowed key was typed.
+    return false;
+}
+function isDecimal(evt, element) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if ((charCode != 46 || $(element).val().indexOf('.') != -1) &&      // “.” CHECK DOT, AND ONLY ONE.
+        (charCode < 48 || charCode > 57)
+       )
+        return false;
+    return true;
+}
+function isNumber(evt, element) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if (//(charCode != 45 || $(element).val().indexOf('-') != -1) &&      // “-” CHECK MINUS, AND ONLY ONE.
+        (charCode < 48 || charCode > 57))
+        return false;
+    return true;
+}
+function isInteger(evt, element) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if ((charCode != 45 || $(element).val().indexOf('-') != -1) &&      // “-” CHECK MINUS, AND ONLY ONE.
+        (charCode < 48 || charCode > 57))
+        return false;
+    return true;
+}
+var SubmitData = function (formAction, formData, res) {
+    $.ajax({
+        method: "POST",
+        url: formAction,
+        data: formData,
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        success: function (response) {
+            //console.log(response);
+            res(response);
+        },
+        error: function (jqXHR, status, errorThrown) {
+            var responseText = $.parseJSON(jqXHR.responseText);
+            var err = eval("(" + jqXHR.responseText + ")");
+            alert(responseText.Message);
+        }
+    });
+};
+var searchItems = function (searchby) {
+    if (searchby != "") {
+        $.ajax({
+            type: "POST",
+            url: "/Default.aspx/searchItems",
+            data: JSON.stringify({ searchby: searchby }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                //alert(data.d);
+                if (data.d != "")
+                    window.location.href = "/Search/" + data.d + ".html";
+            },
+            error: function (jqXHR, status, errorThrown) {
+                var responseText = jQuery.parseJSON(jqXHR.responseText);
+                var err = eval("(" + jqXHR.responseText + ")");
+                alert(responseText.Message);
+            }
+        });
+    }
+    else {
+        toastr.info('Enter text to search!', "Oops");
+        $('#txtsearch').focus();
+    }
+}
+$(document).ready(function () {
+    // Animate loader off screen
+    jQuery('.preloader').css("display", "block").fadeOut("slow");
+    // Call on loading Ajax
+    $(document).ajaxStart(function () {
+        $(".preloader").css("display", "block");
+    });
+    $(document).ajaxComplete(function () {
+        $(".preloader").fadeOut("slow");
+    });
+    tooltipHandler();
+    // Search Items
+    $(".searchtxt").bind("keydown", function (event) {
+        var keycode = (event.keyCode ? event.keyCode : (event.which ? event.which : event.charCode));
+        if (keycode == 13) {
+            var btn = $(this).data('btn');
+            $("#" + btn + "").click();
+            return false;
+        } else {
+            return true;
+        }
+    });
+    $('#btnsubscribe').click(function () {
+        if ($('#txtsemail').val() != "") {
+            SubmitData(domain + "/default.aspx/SaveEmailSignups", "{'email':'" + $('#txtsemail').val() + "'}",
+                function (response) {
+                    //console.log(jsdata);
+                    $('#signupmsg').css('display', 'block').html('<strong>' + response.d + '</strong>');
+                    setTimeout(function () { $('#signupmsg').css('display', 'none').html(''); }, 5000);
+                    $("input[type=text],input[type=email]").val("");
+                });
+        }
+        else {
+            $('#signupmsg').css('display', 'block').html('<strong>Please Enter your Email Address.</strong>');
+            setTimeout(function () { $('#signupmsg').css('display', 'none').html(''); }, 5000);
+            $('#txtsemail').focus();
+        }
+    });
+    $('#searchbtn').click(function () {
+        if ($('#txtsearch').val() != "")
+            searchItems($('#txtsearch').val());
+        else {
+            toastr.info('Enter text to search!', "Oops");
+            $('#txtsearch').focus();
+        }
+    });
+    $('#mosearchbtn').click(function () {
+        if ($('#txtmosearch').val() != "")
+            searchItems($('#txtmosearch').val());
+        else {
+            toastr.info('Enter text to search!', "Oops");
+            $('#txtmosearch').focus();
+        }
+    });
+    if ($('#contact-form').length) {
+        var form = $('#contact-form');
+        var errorHandler = $('.errorHandler', form);
+        form.validate({
+            rules: {
+                name: {
+                    required: true
+                },
+                email: {
+                    required: true,
+                    email: true
+                },
+                phone: {
+                    required: true
+                },
+                subject: {
+                    required: true
+                },
+                message: {
+                    required: true
+                }
+            },
+            submitHandler: function () {
+                errorHandler.hide();
+                //form.submit();
+                var Name = $(form).find('input[type=text][name="name"]').val();
+                var mobile = $(form).find('input[type=text][name="phone"]').val();
+                var email = $(form).find('input[name="email"]').val();
+                var subject = $(form).find('input[name="subject"]').val();
+                var message = $(form).find('textarea[name="message"]').val();
+                if (Name == '') {
+                    alert("Enter your Name");
+                    return false;
+                }
+                else if (mobile == '' || mobile.length != 10) {
+                    alert("Enter 10 digit mobile no!");
+                    return false;
+                }
+                else {
+                    SubmitData(domain + "/contact.aspx/SendEnquiry", "{'Name':'" + Name + "','Phone':'" + mobile + "','email':'" + email + "','subject':'" + subject + "','message':'" + message + "'}",
+                        function (response) {
+                            var jsdata = response.d;
+                            //console.log(jsdata);
+                            if (jsdata.Success == 1) {
+                                msgDiv = '<div class="alert alert-success">' + jsdata.Msg + '</div>';
+                                $("input[type=text],input[type=email], textarea").val("");
+                            }
+                            else if (jsdata.Success == 0) {
+                                msgDiv = '<div class="alert alert-danger">' + jsdata.Msg + '</div>';
+                            }
+                            $('#msg').html(msgDiv);
+                        });
+                }
+            },
+            invalidHandler: function (event, validator) {
+                errorHandler.show();
+            }
+        });
+        setInterval(function () {
+            $('#msg .alert').hide(1500);
+        }, 1500);
+    }
+});
